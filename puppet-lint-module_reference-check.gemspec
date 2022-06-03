@@ -1,6 +1,6 @@
 Gem::Specification.new do |spec|
   spec.name        = 'puppet-lint-module_reference-check'
-  spec.version     = '0.1.1'
+  spec.version     = '0.1.2'
   spec.homepage    = 'https://github.com/dodevops/puppet-lint-module_reference-check'
   spec.license     = 'MIT'
   spec.author      = 'Dennis Ploeger'
