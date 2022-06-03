@@ -34,6 +34,31 @@ describe 'module_reference' do
     end
   end
 
+  context 'valid code with reference to unused module' do
+    let(:code) do
+      <<~CODE
+        # @ref apache
+        # @note puppetlabs-apache
+        # @see https://forge.puppet.com/modules/puppetlabs/apache
+        #
+        # @see profile::test
+        #
+        # @see profile::testfeature - Feature "test"
+        class test () {
+          include profile::test
+          class {
+            'apache':
+          }
+          include apache
+        }
+      CODE
+    end
+
+    it 'should detect detect any problems' do
+      expect(problems).to have(0).problems
+    end
+  end
+
   context 'code with missing internal link' do
     let(:code) do
       <<~CODE
@@ -162,35 +187,6 @@ describe 'module_reference' do
 
     it 'should create a warning' do
       expect(problems).to contain_warning('Reference to profile::testfeature was found higher than @see profile::test').on_line(1).in_column(1)
-    end
-  end
-
-  context 'code with reference to unused module' do
-    let(:code) do
-      <<~CODE
-        # @ref apache
-        # @note puppetlabs-apache
-        # @see https://forge.puppet.com/modules/puppetlabs/apache
-        #
-        # @see profile::test
-        #
-        # @see profile::testfeature - Feature "test"
-        class test () {
-          include profile::test
-          class {
-            'apache':
-          }
-          include apache
-        }
-      CODE
-    end
-
-    it 'should detect exactly one problem' do
-      expect(problems).to have(1).problems
-    end
-
-    it 'should create a warning' do
-      expect(problems).to contain_warning('Can\'t find referenced module profile::testfeature').on_line(1).in_column(1)
     end
   end
 

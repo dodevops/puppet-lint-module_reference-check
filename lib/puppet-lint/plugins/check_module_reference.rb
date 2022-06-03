@@ -130,7 +130,7 @@ PuppetLint.new_check(:module_reference) do
       return return_object if captures['name'].match?(%r(https?://))
 
       reference = @workflow.references.select { |ref| ref[:name] == captures['name'] }
-      return warn("Can't find referenced module #{captures['name']}") if reference.empty?
+      return return_object if reference.empty?
 
       return_object[:type] = reference.first[:type]
     else
