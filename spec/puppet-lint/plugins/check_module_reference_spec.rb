@@ -59,6 +59,23 @@ describe 'module_reference' do
     end
   end
 
+  context 'valid code with using include in a different context' do
+    let(:code) do
+      <<~CODE
+        class test () {
+          $a = {
+            include => 'something'
+          }
+          $a.reduce({})
+        }
+      CODE
+    end
+
+    it 'should detect detect any problems' do
+      expect(problems).to have(0).problems
+    end
+  end
+
   context 'code with missing internal link' do
     let(:code) do
       <<~CODE

@@ -53,7 +53,7 @@ class Reference
     feature_includes = []
     tokens.reject { |token| %i[WHITESPACE NEWLINE INDENT].include? token.type }.each do |token|
       @current_token = token
-      @workflow.got_include if token.value == 'include'
+      @workflow.got_include if token.type == :NAME && token.value == 'include' && token.next_code_token&.type == :NAME
       @workflow.got_class if token.value == 'class'
       @workflow.got_features_start if token.value == 'role::include_features'
       @workflow.got_feature if token.type == :LBRACK && @workflow.current == :awaiting_feature
