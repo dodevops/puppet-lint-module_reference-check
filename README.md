@@ -20,6 +20,9 @@ This checks whether used modules are properly referenced in the comments by thes
   - internal modules
   - modules referenced by features
 
+**Note**: This check can only detect component module usage with the `class` and `include` keywords, but supports
+reference comments to undetectable components modules as well.
+
 ## Usage
 
 To use the plugin, add the following line to the Gemfile:

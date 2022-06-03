@@ -146,6 +146,9 @@ PuppetLint.new_check(:module_reference) do
           break
         end
       end
+      comments[index + 1]&.match(/^@note (?<name>.+)$/) do |matchdata|
+        return_object[:name] = matchdata['name']
+      end
     end
     return_object
   end

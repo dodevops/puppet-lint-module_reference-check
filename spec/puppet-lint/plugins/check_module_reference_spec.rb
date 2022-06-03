@@ -59,6 +59,25 @@ describe 'module_reference' do
     end
   end
 
+  context 'valid code with correctly sorted reference to undetectable component module' do
+    let(:code) do
+      <<~CODE
+        # @ref foo
+        # @note undetected-a
+        # @see https://forge.puppet.com/modules/undetected/a
+        # @ref bar
+        # @note undetected-b
+        # @see https://forge.puppet.com/modules/undetected/b
+        class test () {
+        }
+      CODE
+    end
+
+    it 'should detect detect any problems' do
+      expect(problems).to have(0).problems
+    end
+  end
+
   context 'valid code with using include in a different context' do
     let(:code) do
       <<~CODE
