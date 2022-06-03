@@ -3,7 +3,7 @@
 require 'finite_machine'
 
 # A workflow to describe includes and class declarations
-class IncludeWorkflow < FiniteMachine::Definition
+class ReferenceWorkflow < FiniteMachine::Definition
   initial :start
 
   event :got_include, from: :start, to: :awaiting_include_name

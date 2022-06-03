@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require_relative 'include_workflow'
+require_relative 'reference_workflow'
 
 REF_TYPE_ENUM = {
   internal: 0,
@@ -22,9 +22,9 @@ class InvalidTokenForState < StandardError
 end
 
 # A utility class to process tokens and analyze includes
-class Include
+class Reference
   def initialize
-    @workflow = IncludeWorkflow.new(self)
+    @workflow = ReferenceWorkflow.new(self)
 
     reset
   end

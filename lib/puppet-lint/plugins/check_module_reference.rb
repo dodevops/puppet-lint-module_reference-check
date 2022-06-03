@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require_relative '../../puppet-lint-module_reference-check/include'
+require_relative '../../puppet-lint-module_reference-check/reference'
 
 # Find the header comments for a class or a defined type
 #
@@ -32,7 +32,7 @@ end
 
 PuppetLint.new_check(:module_reference) do
   def initialize
-    @workflow = Include.new
+    @workflow = Reference.new
     # noinspection RubySuperCallWithoutSuperclassInspection
     super
   end
