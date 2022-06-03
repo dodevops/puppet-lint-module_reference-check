@@ -19,13 +19,15 @@ def get_comments(tokens, token_start)
   comments.reject { |comment| comment.type == :NEWLINE }.reverse!
 end
 
-def get_first_index_of_type(comments, type)
+def get_first_index_of_type(comments, type, feature_refs)
   comments.each_with_index do |comment, index|
-    comment.match(/@see (?<name>.+)/) do |match|
+    comment.match(/@see (?<name>\S+)/) do |match|
+      next if feature_refs.any? { |ref| ref[:name] == match.named_captures['name'] }
       return index if match.named_captures['name'].match?(INTERNAL_MODULE_REGEXP) && type == REF_TYPE_ENUM[:internal]
-      return index if type == REF_TYPE_ENUM[:component]
+      return index if !match.named_captures['name'].match?(INTERNAL_MODULE_REGEXP) && type == REF_TYPE_ENUM[:component]
     end
   end
+  0
 end
 
 PuppetLint.new_check(:module_reference) do
@@ -70,7 +72,8 @@ PuppetLint.new_check(:module_reference) do
       comments,
       get_first_index_of_type(
         comments,
-        REF_TYPE_ENUM[:component]
+        REF_TYPE_ENUM[:component],
+        @workflow.references.filter { |ref| ref[:type] == REF_TYPE_ENUM[:feature] }
       )
     )
 
@@ -110,30 +113,61 @@ PuppetLint.new_check(:module_reference) do
       comments,
       get_first_index_of_type(
         comments,
-        REF_TYPE_ENUM[:internal]
+        REF_TYPE_ENUM[:internal],
+        @workflow.references.filter { |ref| ref[:type] == REF_TYPE_ENUM[:feature] }
       )
     )
 
     true
   end
 
+  def get_relevant_name(captures, comments, index)
+    return_object = {
+      name: captures['name'],
+      type: nil
+    }
+    if captures['type'] == 'see' && (index == 0 || index > 0 && !comments[index - 1].match(/@note/))
+      return return_object if captures['name'].match?(%r(https?://))
+
+      reference = @workflow.references.select { |ref| ref[:name] == captures['name'] }
+      return warn("Can't find referenced module #{captures['name']}") if reference.empty?
+
+      return_object[:type] = reference.first[:type]
+    else
+      @workflow
+        .references
+        .select { |ref| ref[:type] == REF_TYPE_ENUM[:component] }
+        .each do |ref|
+        next unless captures['name'].split(',').any? { |refmatch| ref[:name].match?(refmatch) }
+
+        comments[index + 1].match(/^@note (?<name>.+)$/) do |matchdata|
+          return_object[:name] = matchdata['name']
+          return_object[:type] = ref[:type]
+          break
+        end
+      end
+    end
+    return_object
+  end
+
   def check_order(comments)
     last_comment = nil
     current_type = REF_TYPE_ENUM[:component]
-    comments.each do |comment|
-      comment.match(/@see (?<name>\S+)/) do |match|
-        current_comment = match.named_captures['name']
+    comments.each_with_index do |comment, index|
+      comment.match(/@(?<type>see|ref) (?<name>\S+)/) do |match|
+        ref_object = get_relevant_name(match.named_captures, comments, index)
+        return false unless ref_object
+
+        current_comment = ref_object[:name]
+        return warn("No relevant name found for #{comment}") if current_comment.nil?
         next if current_comment.match?('https?://')
 
-        reference = @workflow.references.select { |ref| ref[:name] == current_comment }
-        return warn("Can't find referenced module #{current_comment}") if reference.empty?
-
-        if reference[0][:type] != current_type
+        if ref_object[:type] != current_type
           last_comment = nil
-          current_type = reference[0][:type]
+          current_type = ref_object[:type]
         end
         last_comment = current_comment if last_comment.nil?
-        return warn("#{current_comment} sorted before #{last_comment}") if last_comment > current_comment
+        return warn("#{current_comment} sorted after #{last_comment}") if last_comment > current_comment
       end
     end
   end
